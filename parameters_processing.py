@@ -1,7 +1,7 @@
 from re import search, sub
 
 
-def format_phone_number(func: function) -> function:
+def format_phone_number(func):
 
     def decorate(phone):
         
@@ -9,7 +9,7 @@ def format_phone_number(func: function) -> function:
         
         pattern = r'^(0|380)\d+'
         correct_phone = search(pattern, clear_phone)
-        if correct_phone == None:
+        if correct_phone is None:
             return ''
         else:
             clear_phone = correct_phone.group()
@@ -40,7 +40,7 @@ def check_name(name: str) -> str:
     
     pattern = r'^[a-zA-Z_]+\w+'
     correct_name = search(pattern, name)
-    if correct_name != None:
+    if correct_name is not None:
         return correct_name.group()
 
 

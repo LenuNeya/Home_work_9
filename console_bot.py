@@ -1,36 +1,34 @@
-from parameters_processing import sanitize_phone_number, check_name, user_input_split
+'''
+Консольний бот-помічник, який розпізнає команди, що вводяться з клавіатури, і відповідає відповідно до введеної команди
+'''
 
+
+from decorator_error import input_error
+from parameters_processing import sanitize_phone_number, check_name, user_input_split
 
 CONTACTS = {}
 
 
-def input_error(func: function) -> function:
-    
-    def print_error(*args):
-        try:
-            bot_answer = func(*args)
-        except (ValueError, KeyError, TypeError, IndexError) as msg_error:
-            bot_answer = msg_error
-        
-        return bot_answer
-
-    return print_error
-
-
 @input_error
 def add_or_change(name: str, phone: str, add=True) -> str:
-    
+    '''
+    Обробка команд add і change
+    add - додає користувача і номер телефона в словник;
+    change - змінює номер телефона для вказаного користувача
+    '''
     clean_phone = sanitize_phone_number(phone)
     if len(clean_phone) != 13:
         raise ValueError('The phone number format is incorrect')
-    elif len(name) == 0:
+    elif not name:
         raise ValueError('Enter user name')
 
     if add:
-        if CONTACTS.get(name, None) != None:
+        if CONTACTS.get(name, None) is not None:
             raise ValueError('User with that name already exists')
         msg = f'Nice to meet you {name}!'
     else:
+        if CONTACTS.get(name, None) is None:
+            raise ValueError(f'User {name.title()} not found')
         msg = f'Saved your new phone number {clean_phone}!'
 
     CONTACTS.update({name: clean_phone})
@@ -40,39 +38,52 @@ def add_or_change(name: str, phone: str, add=True) -> str:
 
 @input_error
 def verification_name(name: str) -> str:
-    
+    '''
+    Перевіряємо корректність введеного імені користувача.
+    І`мя не може починатись з цифри та має містити лише латинські літери, цифри, або символ _ 
+    '''
     correct_name = check_name(name)
-    if correct_name == None:
+    if correct_name is None:
         raise ValueError('Name must start with a Latin letter or the symbol "_" and contain only Latin letters and numbers, or the symbol "_"')
     else:
         return correct_name.group()
 
 
 def fin_work() -> str:
-    
+    '''
+    Обробка команди завершення роботи бота
+    '''
     return f'Good bye!'
 
 
 @input_error
 def get_phone(name: str) -> str:
-    
-    if len(name) == 0:
+    '''
+    Обробка команди phone
+    phone - повертає номер телефона за іменем вказаного користувача
+    '''
+    if not name:
         raise ValueError('Please enter user name')
-    elif CONTACTS.get(name, None) != None:
-        raise KeyError(f'User {name.title()} not found')
+    elif CONTACTS.get(name, None) is None:
+        raise ValueError (f'User {name.title()} not found')
 
     return f'Your phone number {CONTACTS.get(name)}'
 
 
 def hello() -> str:
-    
+    '''
+    Обробка команди початку роботи бота
+    '''
     return 'How can I help you?'
 
 
 @input_error
 def show_all() -> str:
-    
-    if len(CONTACTS) == 0:
+    '''
+    Обробка команди show_all
+    show_all - повертає номер телефона за іменем вказаного користувача
+    '''
+    if not CONTACTS:
         raise ValueError('Users base is empty')
 
     answer_text = ''
@@ -83,6 +94,9 @@ def show_all() -> str:
     return answer_text
 
 
+'''
+Словник для зберігання відповідності команд та функцій для їх обробки
+'''
 COMMANDS = {
     'hello': {'func': hello, 'param': 0},
     'add': {'func': add_or_change, 'param': 2}, 
@@ -94,15 +108,17 @@ COMMANDS = {
 
 
 @input_error
-def parser_user_input(user_input: str) -> function:
-    
+def parser_user_input(user_input: str):
+    '''
+    Обробка даних, введених користувачем
+    '''
     params_input = user_input_split(user_input)
-    if len(params_input) == 0:
+    if not params_input:
         raise ValueError(hello())
 
     command = params_input[0]
     dict_finction = COMMANDS.get(command, None)
-    if dict_finction == None:
+    if dict_finction is None:
         raise ValueError(hello())
     
     count_arg = dict_finction['param']
@@ -123,7 +139,9 @@ def parser_user_input(user_input: str) -> function:
 
 
 def main():
-    
+    '''
+    Головна функція роботи бота
+    '''
     bot_answer = 'Hi here!'
     while True:
         
@@ -139,5 +157,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()
